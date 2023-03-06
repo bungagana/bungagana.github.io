@@ -7,7 +7,6 @@ import plotly.express as px
 from PIL import Image
 import numpy as np
 from streamlit_option_menu import option_menu
-import mysql.connector
 
 #### ----- NAVIGATION BAR ---- ####
 selected = option_menu(
@@ -55,13 +54,22 @@ if selected == "Home":
     """
     st.markdown(centered_text, unsafe_allow_html=True)
     # Define the form fields
-    form = st.form(key='my_form')
-    name = form.text_input('Name')
-    location = form.text_input('Location')
-    phone = form.text_input('Phone')
-    complaint = form.text_area('Complaint')
-    submit = form.form_submit_button('Submit')
+    name = st.text_input("Name")
+    email = st.text_input("Email")
+    location = st.text_input("Location")
+    complaint = st.text_area("Complaint")
     st.caption ("u can drop your complaint about covid-19 in this form")
+    
+    # Create a submit button
+    if st.button("Submit"):
+        result = {"Name": name, "Email": email, "Location": location, "Complaint": complaint}
+        df = pd.DataFrame(result, index=[0])
+        
+        # Store the data in a database
+        with open("complaints.csv", "a") as f:
+            df.to_csv(f, header=False)
+            
+        st.success("Complaint submitted successfully!")
         
     #------------- INFO SECTION ------------------
     st.markdown("---")
@@ -70,24 +78,10 @@ if selected == "Home":
     <h6> <em> It's My First Time w/ Streamlit </em></h6>
     </div>
     """
-    st.markdown("Dataset:[OpenAI](https://data.humdata.org/dataset/nyt-covid-19-data/resource/34450bc6-76e5-49a5-879e-26edfa7b3b27)")
     st.markdown(centered_text, unsafe_allow_html=True)
     st.markdown("---")
     
-    # Connect to the database
-    cnx = mysql.connector.connect(user='root', password='', host='localhost', database='covidform')
-
-    # Define a function to show the data in a table
-    if submit:
-        cursor = cnx.cursor()
-        query = "INSERT INTO my_table (name, location, phone, complaint) VALUES (%s, %s, %s, %s)"
-        values = (name, location, phone, complaint)
-        cursor.execute(query, values)
-        cnx.commit()
-        st.success("Data added to database")
-
-    # Close the database connection
-    cnx.close()
+    
 #### ----- SECTION GRAPH ---- ####
 if selected == "Graph":
     
@@ -138,3 +132,5 @@ if selected == "Show":
     st.header("\n Show Full Data")
     st.table(data)
     #--------------------------------------------------------------------------
+    
+  
